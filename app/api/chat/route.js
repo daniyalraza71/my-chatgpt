@@ -56,7 +56,7 @@ export async function POST(req) {
 
     // OpenRouter Free Chat Completion Request
     const response = await client.chat.completions.create({
-      model: "google/gemini-2.0-flash-exp:free",
+      model: "deepseek/deepseek-r1:free",
       messages: messages,
     });
 
