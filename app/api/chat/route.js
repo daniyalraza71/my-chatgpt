@@ -5,7 +5,6 @@ export async function POST(req) {
   try {
     const body = await req.json();
 
-    // Frontend handles either { prompt: "text" }, { message: "text" }, or { messages: [...] }
     let rawMessages = [];
     if (Array.isArray(body.messages)) {
       rawMessages = body.messages;
@@ -27,7 +26,6 @@ export async function POST(req) {
       );
     }
 
-    // OpenRouter Connection Setup
     const client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
       baseURL: "https://openrouter.ai/api/v1",
@@ -45,7 +43,6 @@ export async function POST(req) {
         content: m.content,
       }));
 
-    // Add System Instruction
     const messages = [
       {
         role: "system",
@@ -54,9 +51,15 @@ export async function POST(req) {
       ...input,
     ];
 
-    // OpenRouter Free Chat Completion Request
+    // OpenRouter Auto-Fallback Models Array (All-In-One Free Tier Setup)
     const response = await client.chat.completions.create({
-      model: "deepseek/deepseek-r1:free",
+      model: "deepseek/deepseek-r1:free", // Primary Model
+      models: [
+        "deepseek/deepseek-r1:free",
+        "qwen/qwen-2.5-coder-32b-instruct:free",
+        "meta-llama/llama-3.1-8b-instruct:free",
+        "mistralai/mistral-7b-instruct:free"
+      ], // Fallback models if primary fails
       messages: messages,
     });
 
