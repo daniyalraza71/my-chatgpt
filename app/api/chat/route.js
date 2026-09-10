@@ -51,13 +51,13 @@ export async function POST(req) {
       ...input,
     ];
 
-   // OpenRouter Auto-Fallback Models Array (Max 3 Items Allowed)
+   // OpenRouter Auto-Fallback Models Array (Working Free Models Only)
     const response = await client.chat.completions.create({
-      model: "deepseek/deepseek-r1:free",
+      model: "openrouter/auto",
       models: [
-        "deepseek/deepseek-r1:free",
         "qwen/qwen-2.5-coder-32b-instruct:free",
-        "meta-llama/llama-3.1-8b-instruct:free"
+        "meta-llama/llama-3.1-8b-instruct:free",
+        "google/gemma-2-9b-it:free"
       ],
       messages: messages,
     });
