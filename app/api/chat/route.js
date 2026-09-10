@@ -22,13 +22,15 @@ export async function POST(req) {
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: "OPENAI_API_KEY is missing in .env.local" },
+        { error: "OPENAI_API_KEY is missing in environment variables" },
         { status: 500 }
       );
     }
 
+    // OpenRouter Connection Setup
     const client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
+      baseURL: "https://openrouter.ai/api/v1",
     });
 
     const input = rawMessages
@@ -43,25 +45,35 @@ export async function POST(req) {
         content: m.content,
       }));
 
-    const response = await client.responses.create({
-      model: "gpt-5.6-luna",
-      instructions:
-        "You are My AI, a helpful, concise and professional personal assistant. Maintain conversation context and answer naturally.",
-      input,
+    // Add System Instruction
+    const messages = [
+      {
+        role: "system",
+        content: "You are My AI, a helpful, concise and professional personal assistant. Maintain conversation context and answer naturally.",
+      },
+      ...input,
+    ];
+
+    // OpenRouter Free Chat Completion Request
+    const response = await client.chat.completions.create({
+      model: "meta-llama/llama-3.3-70b-instruct:free",
+      messages: messages,
     });
 
+    const outputText = response.choices[0]?.message?.content || "I couldn't generate a response.";
+
     return NextResponse.json({
-      message: response.output_text || "I couldn't generate a response.",
+      message: outputText,
     });
 
   } catch (error) {
-    console.error("OPENAI ERROR:", error);
+    console.error("OPENROUTER ERROR:", error);
 
     return NextResponse.json(
       {
         error:
           error?.message ||
-          "OpenAI request failed. Please check your API key and project.",
+          "OpenRouter request failed. Please check your API key.",
       },
       { status: 500 }
     );
