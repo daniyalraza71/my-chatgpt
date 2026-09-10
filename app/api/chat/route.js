@@ -56,7 +56,7 @@ export async function POST(req) {
 
     // OpenRouter Free Chat Completion Request
     const response = await client.chat.completions.create({
-      model: "meta-llama/llama-3.3-70b-instruct:free",
+      model: "google/gemini-2.0-flash-exp:free",
       messages: messages,
     });
 
