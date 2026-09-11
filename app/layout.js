@@ -10,13 +10,13 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: "cover",
+  viewportFit: "contain", // Status bar ke niche push karne ke liye contain rakha hai
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="bg-slate-900">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
