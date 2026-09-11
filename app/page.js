@@ -28,10 +28,7 @@ import {
   X,
 } from "lucide-react";
 
-// PDF.js worker setup
-if (typeof window !== "undefined") {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
-}
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 export default function Home() {
   const [conversations, setConversations] = useState([]);
@@ -83,17 +80,6 @@ export default function Home() {
     }
   }, [input]);
 
-  const fetchConversations = useCallback(async (userId) => {
-    const { data, error } = await supabase
-      .from("conversations")
-      .select("*")
-      .eq("user_id", userId)
-      .order("is_pinned", { ascending: false })
-      .order("created_at", { ascending: false });
-
-    if (!error && data) setConversations(data);
-  }, []);
-
   // Auth & Initial Fetch
   useEffect(() => {
     const checkUser = async () => {
@@ -108,7 +94,7 @@ export default function Home() {
       }
     };
     checkUser();
-  }, [router, fetchConversations]);
+  }, [router]);
 
   const fetchMessages = useCallback(async (chatId) => {
     if (!chatId) {
@@ -128,6 +114,17 @@ export default function Home() {
     if (activeChat) fetchMessages(activeChat);
     else setMessages([]);
   }, [activeChat, fetchMessages]);
+
+  const fetchConversations = async (userId) => {
+    const { data, error } = await supabase
+      .from("conversations")
+      .select("*")
+      .eq("user_id", userId)
+      .order("is_pinned", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (!error && data) setConversations(data);
+  };
 
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
@@ -181,9 +178,8 @@ export default function Home() {
     e.stopPropagation();
     let exportContent = `# ${chat.title}\n\n`;
     messages.forEach((m) => {
-      exportContent += `### ${
-        m.role === "user" ? "User" : "AI"
-      }:\n${m.content}\n\n`;
+      exportContent += `### ${m.role === "user" ? "User" : "AI"
+        }:\n${m.content}\n\n`;
     });
 
     const blob = new Blob([exportContent], { type: "text/markdown" });
@@ -192,7 +188,6 @@ export default function Home() {
     a.href = url;
     a.download = `${chat.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.md`;
     a.click();
-    URL.revokeObjectURL(url);
   };
 
   const copyToClipboard = (text, index) => {
@@ -201,14 +196,8 @@ export default function Home() {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const removeFile = () => {
-    setSelectedFile(null);
-    setFileContent("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
   const handleFileChange = async (e) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files[0];
     if (!file) return;
 
     setSelectedFile(file);
@@ -239,6 +228,12 @@ export default function Home() {
     }
   };
 
+  const removeFile = () => {
+    setSelectedFile(null);
+    setFileContent("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   async function sendMessage(e, customPrompt = null) {
     e?.preventDefault();
 
@@ -258,13 +253,11 @@ export default function Home() {
       ? `📎 [File: ${selectedFile.name}]\n${text}`
       : text;
 
-    const payloadPrompt = `${systemInstructionPrefix}${
-      selectedFile
-        ? `[Attached File: ${selectedFile.name}]\n\nFile Content:\n${fileContent}\n\nUser Question: ${
-            text || "Please review and analyze this file."
-          }`
+    const payloadPrompt = `${systemInstructionPrefix}${selectedFile
+        ? `[Attached File: ${selectedFile.name}]\n\nFile Content:\n${fileContent}\n\nUser Question: ${text || "Please review and analyze this file."
+        }`
         : text
-    }`;
+      }`;
 
     let currentChatId = activeChat;
 
@@ -366,9 +359,8 @@ export default function Home() {
 
       {/* Sidebar / Mobile Drawer */}
       <aside
-        className={`fixed md:static z-50 top-0 bottom-0 left-0 w-72 h-full bg-slate-950 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out shrink-0 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
+        className={`fixed md:static z-50 top-0 bottom-0 left-0 w-72 h-full bg-slate-950 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out shrink-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          }`}
       >
         <div className="p-4 border-b border-slate-800 flex items-center justify-between">
           <div className="font-bold text-lg tracking-wide text-white">MY AI</div>
@@ -428,11 +420,10 @@ export default function Home() {
                 setActiveChat(chat.id);
                 setIsSidebarOpen(false);
               }}
-              className={`flex items-center justify-between p-2.5 rounded-xl text-xs cursor-pointer group transition ${
-                activeChat === chat.id
+              className={`flex items-center justify-between p-2.5 rounded-xl text-xs cursor-pointer group transition ${activeChat === chat.id
                   ? "bg-slate-800 text-white font-medium"
                   : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
-              }`}
+                }`}
             >
               {editingChatId === chat.id ? (
                 <input
@@ -510,7 +501,7 @@ export default function Home() {
 
       {/* Main Chat Area */}
       <section className="flex-1 flex flex-col h-full min-w-0 bg-slate-900 relative">
-        {/* Top Navbar */}
+       {/* Top Navbar with Safe Area Padding */}
         <header className="w-full border-b border-slate-800 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between shrink-0 bg-slate-900/90 backdrop-blur z-30 sticky top-0 min-h-[3.5rem]">
           <div className="flex items-center gap-3">
             <button
@@ -529,7 +520,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Persona Selector */}
+        {/* Persona Selector */}
           <select
             value={systemPersona}
             onChange={(e) => setSystemPersona(e.target.value)}
@@ -555,17 +546,15 @@ export default function Home() {
           ) : (
             messages.map((m, i) => (
               <div
-                key={m.id || i}
-                className={`flex ${
-                  m.role === "user" ? "justify-end" : "justify-start"
-                }`}
+                key={i}
+                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"
+                  }`}
               >
                 <div
-                  className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 text-xs sm:text-sm break-words ${
-                    m.role === "user"
+                  className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 text-xs sm:text-sm break-words ${m.role === "user"
                       ? "bg-blue-600 text-white rounded-br-none"
                       : "bg-slate-800 text-slate-100 border border-slate-700/50 rounded-bl-none"
-                  }`}
+                    }`}
                 >
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
@@ -689,7 +678,7 @@ export default function Home() {
                   }
                 }}
                 placeholder="Message My AI..."
-                className="flex-1 bg-transparent border-none text-slate-100 outline-none resize-none px-1 py-1 text-base max-h-40 placeholder-slate-400"
+                className="flex-1 bg-transparent border-none theme-text outline-none resize-none px-1 py-1 text-base max-h-40 placeholder-slate-400"
               />
 
               {loading ? (
