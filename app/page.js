@@ -18,13 +18,14 @@ import {
   Search,
   Plus,
   Paperclip,
-  Image as ImageIcon,
   Send,
   Square,
   Moon,
   Sun,
   LogOut,
   Check,
+  Menu,
+  X,
 } from "lucide-react";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
@@ -35,9 +36,11 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [imageLoading, setImageLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [theme, setTheme] = useState("dark");
+
+  // Mobile Responsive States
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // New Feature States
   const [searchQuery, setSearchQuery] = useState("");
@@ -70,14 +73,19 @@ export default function Home() {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 180)}px`;
+      textareaRef.current.style.height = `${Math.min(
+        textareaRef.current.scrollHeight,
+        160
+      )}px`;
     }
   }, [input]);
 
   // Auth & Initial Fetch
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         router.push("/login");
       } else {
@@ -124,7 +132,7 @@ export default function Home() {
     document.documentElement.setAttribute("data-theme", nextTheme);
   };
 
-  // Chat Actions (Rename, Pin, Delete, Export)
+  // Chat Actions
   const togglePin = async (e, id, currentPinned) => {
     e.stopPropagation();
     const { error } = await supabase
@@ -170,7 +178,9 @@ export default function Home() {
     e.stopPropagation();
     let exportContent = `# ${chat.title}\n\n`;
     messages.forEach((m) => {
-      exportContent += `### ${m.role === "user" ? "User" : "AI"}:\n${m.content}\n\n`;
+      exportContent += `### ${
+        m.role === "user" ? "User" : "AI"
+      }:\n${m.content}\n\n`;
     });
 
     const blob = new Blob([exportContent], { type: "text/markdown" });
@@ -181,7 +191,7 @@ export default function Home() {
     a.click();
   };
 
-  // Copy Message to Clipboard
+  // Copy Message
   const copyToClipboard = (text, index) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
@@ -205,7 +215,8 @@ export default function Home() {
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
-          fullText += textContent.items.map((item) => item.str).join(" ") + "\n";
+          fullText +=
+            textContent.items.map((item) => item.str).join(" ") + "\n";
         }
         extractedText = fullText;
       } else {
@@ -231,13 +242,15 @@ export default function Home() {
     e?.preventDefault();
 
     let text = customPrompt || input.trim();
-    if ((!text && !selectedFile) || loading || imageLoading || readingFile) return;
+    if ((!text && !selectedFile) || loading || readingFile) return;
 
     let systemInstructionPrefix = "";
     if (systemPersona === "developer") {
-      systemInstructionPrefix = "[System Prompt: Respond as a Senior Full-Stack Engineer with clean code examples.]\n\n";
+      systemInstructionPrefix =
+        "[System Prompt: Respond as a Senior Full-Stack Engineer with clean code examples.]\n\n";
     } else if (systemPersona === "writer") {
-      systemInstructionPrefix = "[System Prompt: Respond as a Professional Content Writer and Editor.]\n\n";
+      systemInstructionPrefix =
+        "[System Prompt: Respond as a Professional Content Writer and Editor.]\n\n";
     }
 
     const displayUserContent = selectedFile
@@ -246,14 +259,18 @@ export default function Home() {
 
     const payloadPrompt = `${systemInstructionPrefix}${
       selectedFile
-        ? `[Attached File: ${selectedFile.name}]\n\nFile Content:\n${fileContent}\n\nUser Question: ${text || "Please review and analyze this file."}`
+        ? `[Attached File: ${selectedFile.name}]\n\nFile Content:\n${fileContent}\n\nUser Question: ${
+            text || "Please review and analyze this file."
+          }`
         : text
     }`;
 
     let currentChatId = activeChat;
 
     if (!currentChatId) {
-      const titleText = selectedFile ? `📎 ${selectedFile.name}` : text.slice(0, 30);
+      const titleText = selectedFile
+        ? `📎 ${selectedFile.name}`
+        : text.slice(0, 30);
       const { data } = await supabase
         .from("conversations")
         .insert({ user_id: user.id, title: titleText })
@@ -283,7 +300,10 @@ export default function Home() {
     abortControllerRef.current = new AbortController();
 
     try {
-      const apiMessages = messages.map((m) => ({ role: m.role, content: m.content }));
+      const apiMessages = messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
       apiMessages.push({ role: "user", content: payloadPrompt });
 
       const res = await fetch("/api/chat", {
@@ -298,7 +318,10 @@ export default function Home() {
 
       const assistantResponse = data.message || "No response content";
 
-      setMessages([...next, { role: "assistant", content: assistantResponse, type: "text" }]);
+      setMessages([
+        ...next,
+        { role: "assistant", content: assistantResponse, type: "text" },
+      ]);
 
       await supabase.from("messages").insert({
         conversation_id: currentChatId,
@@ -308,7 +331,10 @@ export default function Home() {
       });
     } catch (err) {
       if (err.name !== "AbortError") {
-        setMessages([...next, { role: "assistant", content: "Error: " + err.message }]);
+        setMessages([
+          ...next,
+          { role: "assistant", content: "Error: " + err.message },
+        ]);
       }
     } finally {
       setLoading(false);
@@ -329,46 +355,85 @@ export default function Home() {
   );
 
   return (
-    <main className="shell">
-      <aside className="sidebar">
-        <div className="sidebarHeader">
-          <div className="brand">MY AI</div>
-          <button className="themeToggle" onClick={toggleTheme}>
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+    <main className="flex h-screen h-[100dvh] w-full overflow-hidden bg-slate-900 text-slate-100">
+      
+      {/* Mobile Backdrop Overlay */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity"
+        />
+      )}
+
+      {/* Sidebar / Mobile Drawer */}
+      <aside
+        className={`fixed md:relative z-50 top-0 bottom-0 left-0 w-72 bg-slate-950 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+          <div className="font-bold text-lg tracking-wide text-white">MY AI</div>
+          <div className="flex items-center gap-2">
+            <button
+              className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"
+              onClick={toggleTheme}
+            >
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+            <button
+              className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white md:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* New Chat Button */}
+        <div className="p-3">
+          <button
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-xl transition text-sm shadow-md"
+            onClick={() => {
+              setActiveChat(null);
+              setMessages([]);
+              setIsSidebarOpen(false);
+            }}
+          >
+            <Plus size={18} /> New chat
           </button>
         </div>
 
-        <button className="newChat" onClick={() => { setActiveChat(null); setMessages([]); }}>
-          <Plus size={18} /> New chat
-        </button>
-
         {/* Search Bar */}
-        <div style={{ padding: "8px 12px", position: "relative" }}>
-          <Search size={16} style={{ position: "absolute", left: "22px", top: "18px", opacity: 0.5 }} />
-          <input
-            type="text"
-            placeholder="Search chats..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px 12px 8px 34px",
-              borderRadius: "8px",
-              border: "1px solid var(--border-color, #333)",
-              background: "transparent",
-              color: "inherit",
-              fontSize: "13px",
-            }}
-          />
+        <div className="px-3 pb-2">
+          <div className="relative">
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              type="text"
+              placeholder="Search chats..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-slate-700"
+            />
+          </div>
         </div>
 
         {/* Conversations List */}
-        <div className="conversationsList">
+        <div className="flex-1 overflow-y-auto px-3 space-y-1">
           {filteredConversations.map((chat) => (
             <div
               key={chat.id}
-              onClick={() => setActiveChat(chat.id)}
-              className={`chatItem ${activeChat === chat.id ? "active" : ""}`}
+              onClick={() => {
+                setActiveChat(chat.id);
+                setIsSidebarOpen(false);
+              }}
+              className={`flex items-center justify-between p-2.5 rounded-xl text-xs cursor-pointer group transition ${
+                activeChat === chat.id
+                  ? "bg-slate-800 text-white font-medium"
+                  : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
+              }`}
             >
               {editingChatId === chat.id ? (
                 <input
@@ -378,64 +443,96 @@ export default function Home() {
                   onBlur={(e) => saveTitle(e, chat.id)}
                   onKeyDown={(e) => e.key === "Enter" && saveTitle(e, chat.id)}
                   autoFocus
-                  style={{ background: "transparent", border: "none", color: "inherit", width: "100%" }}
+                  className="bg-transparent border-none text-white outline-none w-full"
                 />
               ) : (
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                <span className="truncate flex-1 mr-2">
                   {chat.is_pinned && "📌 "}💬 {chat.title}
                 </span>
               )}
 
-              <div style={{ display: "flex", gap: "4px" }}>
-                <button onClick={(e) => togglePin(e, chat.id, chat.is_pinned)} title="Pin Chat">
-                  <Pin size={14} style={{ opacity: chat.is_pinned ? 1 : 0.4 }} />
+              <div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition">
+                <button
+                  onClick={(e) => togglePin(e, chat.id, chat.is_pinned)}
+                  title="Pin Chat"
+                  className="p-1 hover:text-white"
+                >
+                  <Pin size={13} className={chat.is_pinned ? "text-blue-400" : ""} />
                 </button>
-                <button onClick={(e) => startRenaming(e, chat)} title="Rename Chat">
-                  <Edit2 size={14} style={{ opacity: 0.6 }} />
+                <button
+                  onClick={(e) => startRenaming(e, chat)}
+                  title="Rename Chat"
+                  className="p-1 hover:text-white"
+                >
+                  <Edit2 size={13} />
                 </button>
                 {activeChat === chat.id && (
-                  <button onClick={(e) => exportChat(e, chat)} title="Export Chat">
-                    <Download size={14} style={{ opacity: 0.6 }} />
+                  <button
+                    onClick={(e) => exportChat(e, chat)}
+                    title="Export Chat"
+                    className="p-1 hover:text-white"
+                  >
+                    <Download size={13} />
                   </button>
                 )}
-                <button onClick={(e) => deleteConversation(e, chat.id)} title="Delete Chat">
-                  <Trash2 size={14} style={{ opacity: 0.6 }} />
+                <button
+                  onClick={(e) => deleteConversation(e, chat.id)}
+                  title="Delete Chat"
+                  className="p-1 hover:text-red-400"
+                >
+                  <Trash2 size={13} />
                 </button>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="sidebarFooter">
-          <div className="userProfile">
-            <div className="userAvatar">{user?.email?.charAt(0).toUpperCase() || "U"}</div>
-            <span className="userName">{user?.email?.split("@")[0] || "User"}</span>
+        {/* User Footer */}
+        <div className="p-3 border-t border-slate-800 flex items-center justify-between bg-slate-950">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+              {user?.email?.charAt(0).toUpperCase() || "U"}
+            </div>
+            <span className="text-xs text-slate-300 truncate">
+              {user?.email?.split("@")[0] || "User"}
+            </span>
           </div>
-          <button className="logoutBtn" onClick={async () => { await supabase.auth.signOut(); router.push("/login"); }}>
+          <button
+            className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-900 transition"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.push("/login");
+            }}
+          >
             <LogOut size={16} />
           </button>
         </div>
       </aside>
 
-      <section className="chat">
-        <header className="topbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <strong>My AI</strong>
-            <span style={{ marginLeft: "8px", opacity: 0.6 }}>GPT-4o Mini</span>
+      {/* Main Chat Area */}
+      <section className="flex-1 flex flex-col h-full min-w-0 bg-slate-900">
+        {/* Top Navbar */}
+        <header className="h-14 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 bg-slate-900/50 backdrop-blur">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 md:hidden"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="flex items-center gap-2">
+              <strong className="text-white text-sm sm:text-base">My AI</strong>
+              <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full hidden sm:inline-block">
+                GPT-4o Mini
+              </span>
+            </div>
           </div>
 
           {/* Persona Selector */}
           <select
             value={systemPersona}
             onChange={(e) => setSystemPersona(e.target.value)}
-            style={{
-              padding: "4px 8px",
-              borderRadius: "6px",
-              border: "1px solid #444",
-              background: "var(--bg-secondary, #222)",
-              color: "inherit",
-              fontSize: "12px",
-            }}
+            className="bg-slate-800 border border-slate-700 text-xs sm:text-sm text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="general">🤖 General Assistant</option>
             <option value="developer">💻 Senior Developer</option>
@@ -443,58 +540,84 @@ export default function Home() {
           </select>
         </header>
 
-        <div className="messages">
+        {/* Messages Container */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 w-full max-w-4xl mx-auto">
           {messages.length === 0 ? (
-            <div className="welcome">
-              <h1>How can I help?</h1>
-              <p>Ask anything, upload a file to analyze, or generate code and images.</p>
+            <div className="h-full flex flex-col items-center justify-center text-center p-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                How can I help?
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-400 max-w-md">
+                Ask anything, upload a file to analyze, or generate code.
+              </p>
             </div>
           ) : (
             messages.map((m, i) => (
-              <div className={"row " + m.role} key={i}>
-                <div className="bubble" style={{ position: "relative" }}>
-                  {m.type === "image" ? (
-                    <img src={m.content} alt="Generated image" style={{ maxWidth: "100%", width: "600px", borderRadius: "14px" }} />
-                  ) : (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        code({ node, inline, className, children, ...props }) {
-                          const match = /language-(\w+)/.exec(className || "");
-                          return !inline && match ? (
-                            <div style={{ borderRadius: "8px", overflow: "hidden", margin: "10px 0" }}>
-                              <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" {...props}>
-                                {String(children).replace(/\n$/, "")}
-                              </SyntaxHighlighter>
-                            </div>
-                          ) : (
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          );
-                        },
-                      }}
-                    >
-                      {m.content}
-                    </ReactMarkdown>
-                  )}
+              <div
+                key={i}
+                className={`flex ${
+                  m.role === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div
+                  className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 text-xs sm:text-sm break-words ${
+                    m.role === "user"
+                      ? "bg-blue-600 text-white rounded-br-none"
+                      : "bg-slate-800 text-slate-100 border border-slate-700/50 rounded-bl-none"
+                  }`}
+                >
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code({ node, inline, className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || "");
+                        return !inline && match ? (
+                          <div className="rounded-lg overflow-hidden my-2 text-xs sm:text-sm">
+                            <SyntaxHighlighter
+                              style={vscDarkPlus}
+                              language={match[1]}
+                              PreTag="div"
+                              {...props}
+                            >
+                              {String(children).replace(/\n$/, "")}
+                            </SyntaxHighlighter>
+                          </div>
+                        ) : (
+                          <code
+                            className="bg-slate-900/60 px-1 py-0.5 rounded text-blue-300 font-mono text-xs"
+                            {...props}
+                          >
+                            {children}
+                          </code>
+                        );
+                      },
+                    }}
+                  >
+                    {m.content}
+                  </ReactMarkdown>
 
-                  {/* Quick Copy / Action Bar */}
+                  {/* Actions for Assistant Messages */}
                   {m.role === "assistant" && (
-                    <div style={{ display: "flex", gap: "8px", marginTop: "8px", opacity: 0.7 }}>
+                    <div className="flex items-center gap-3 mt-3 pt-2 border-t border-slate-700/50 text-slate-400 text-xs">
                       <button
                         onClick={() => copyToClipboard(m.content, i)}
-                        style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}
+                        className="flex items-center gap-1 hover:text-white transition"
                       >
-                        {copiedIndex === i ? <Check size={14} /> : <Copy size={14} />} {copiedIndex === i ? "Copied" : "Copy"}
+                        {copiedIndex === i ? (
+                          <Check size={13} className="text-green-400" />
+                        ) : (
+                          <Copy size={13} />
+                        )}
+                        <span>{copiedIndex === i ? "Copied" : "Copy"}</span>
                       </button>
 
                       {i === messages.length - 1 && (
                         <button
                           onClick={regenerateLastMessage}
-                          style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}
+                          className="flex items-center gap-1 hover:text-white transition"
                         >
-                          <RotateCcw size={14} /> Regenerate
+                          <RotateCcw size={13} />
+                          <span>Regenerate</span>
                         </button>
                       )}
                     </div>
@@ -505,54 +628,88 @@ export default function Home() {
           )}
 
           {loading && (
-            <div className="row assistant">
-              <div className="bubble">Analyzing & Thinking...</div>
+            <div className="flex justify-start">
+              <div className="bg-slate-800 border border-slate-700/50 rounded-2xl rounded-bl-none p-3 text-xs sm:text-sm text-slate-400 animate-pulse">
+                Analyzing & Thinking...
+              </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Composer Input Box */}
-        <div className="composerContainer">
-          {selectedFile && (
-            <div style={{ padding: "8px 16px", background: "var(--hover-bg, #2a2a2a)", borderRadius: "8px", marginBottom: "8px", display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: "13px" }}>📎 {selectedFile.name} {readingFile && "(Reading...)"}</span>
-              <button onClick={removeFile} style={{ background: "none", border: "none", color: "#ff4d4d", cursor: "pointer" }}>✕</button>
-            </div>
-          )}
-
-          <form className="composer" onSubmit={(e) => sendMessage(e)}>
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: "none" }} accept=".pdf,.txt,.js,.jsx,.ts,.tsx,.json,.csv,.md,.css,.html" />
-
-            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading}>
-              <Paperclip size={18} />
-            </button>
-
-            <textarea
-              ref={textareaRef}
-              rows={1}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage(e);
-                }
-              }}
-              placeholder="Message My AI..."
-              style={{ flex: 1, resize: "none", background: "transparent", border: "none", color: "inherit", outline: "none", padding: "8px" }}
-            />
-
-            {loading ? (
-              <button type="button" onClick={() => abortControllerRef.current?.abort()} style={{ background: "#ff4d4d", color: "#fff", borderRadius: "50%", padding: "6px" }}>
-                <Square size={16} />
-              </button>
-            ) : (
-              <button type="submit" disabled={!input.trim() && !selectedFile}>
-                <Send size={18} />
-              </button>
+        {/* Input Bar Section */}
+        <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-900 shrink-0 w-full">
+          <div className="max-w-4xl mx-auto">
+            {selectedFile && (
+              <div className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg mb-2 flex items-center justify-between text-xs text-slate-300">
+                <span className="truncate">
+                  📎 {selectedFile.name}{" "}
+                  {readingFile && "(Reading file...)"}
+                </span>
+                <button
+                  onClick={removeFile}
+                  className="text-red-400 hover:text-red-300 ml-2 font-bold"
+                >
+                  ✕
+                </button>
+              </div>
             )}
-          </form>
+
+            <form
+              onSubmit={(e) => sendMessage(e)}
+              className="flex items-end gap-2 bg-slate-800 border border-slate-700 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-blue-500 transition"
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept=".pdf,.txt,.js,.jsx,.ts,.tsx,.json,.csv,.md,.css,.html"
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+                className="p-2 text-slate-400 hover:text-white transition disabled:opacity-50 shrink-0"
+              >
+                <Paperclip size={18} />
+              </button>
+
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage(e);
+                  }
+                }}
+                placeholder="Message My AI..."
+                className="flex-1 bg-transparent border-none text-white outline-none resize-none px-1 py-1 text-xs sm:text-sm max-h-40 placeholder-slate-500"
+              />
+
+              {loading ? (
+                <button
+                  type="button"
+                  onClick={() => abortControllerRef.current?.abort()}
+                  className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition shrink-0"
+                >
+                  <Square size={16} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!input.trim() && !selectedFile}
+                  className="p-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-xl transition shrink-0"
+                >
+                  <Send size={18} />
+                </button>
+              )}
+            </form>
+          </div>
         </div>
       </section>
     </main>
