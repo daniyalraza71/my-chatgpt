@@ -178,9 +178,8 @@ export default function Home() {
     e.stopPropagation();
     let exportContent = `# ${chat.title}\n\n`;
     messages.forEach((m) => {
-      exportContent += `### ${
-        m.role === "user" ? "User" : "AI"
-      }:\n${m.content}\n\n`;
+      exportContent += `### ${m.role === "user" ? "User" : "AI"
+        }:\n${m.content}\n\n`;
     });
 
     const blob = new Blob([exportContent], { type: "text/markdown" });
@@ -254,13 +253,11 @@ export default function Home() {
       ? `📎 [File: ${selectedFile.name}]\n${text}`
       : text;
 
-    const payloadPrompt = `${systemInstructionPrefix}${
-      selectedFile
-        ? `[Attached File: ${selectedFile.name}]\n\nFile Content:\n${fileContent}\n\nUser Question: ${
-            text || "Please review and analyze this file."
-          }`
+    const payloadPrompt = `${systemInstructionPrefix}${selectedFile
+        ? `[Attached File: ${selectedFile.name}]\n\nFile Content:\n${fileContent}\n\nUser Question: ${text || "Please review and analyze this file."
+        }`
         : text
-    }`;
+      }`;
 
     let currentChatId = activeChat;
 
@@ -362,9 +359,8 @@ export default function Home() {
 
       {/* Sidebar / Mobile Drawer */}
       <aside
-        className={`fixed md:static z-50 top-0 bottom-0 left-0 w-72 h-full bg-slate-950 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out shrink-0 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
+        className={`fixed md:static z-50 top-0 bottom-0 left-0 w-72 h-full bg-slate-950 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out shrink-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          }`}
       >
         <div className="p-4 border-b border-slate-800 flex items-center justify-between">
           <div className="font-bold text-lg tracking-wide text-white">MY AI</div>
@@ -424,11 +420,10 @@ export default function Home() {
                 setActiveChat(chat.id);
                 setIsSidebarOpen(false);
               }}
-              className={`flex items-center justify-between p-2.5 rounded-xl text-xs cursor-pointer group transition ${
-                activeChat === chat.id
+              className={`flex items-center justify-between p-2.5 rounded-xl text-xs cursor-pointer group transition ${activeChat === chat.id
                   ? "bg-slate-800 text-white font-medium"
                   : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
-              }`}
+                }`}
             >
               {editingChatId === chat.id ? (
                 <input
@@ -550,16 +545,14 @@ export default function Home() {
             messages.map((m, i) => (
               <div
                 key={i}
-                className={`flex ${
-                  m.role === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"
+                  }`}
               >
                 <div
-                  className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 text-xs sm:text-sm break-words ${
-                    m.role === "user"
+                  className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 text-xs sm:text-sm break-words ${m.role === "user"
                       ? "bg-blue-600 text-white rounded-br-none"
                       : "bg-slate-800 text-slate-100 border border-slate-700/50 rounded-bl-none"
-                  }`}
+                    }`}
                 >
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
@@ -683,7 +676,7 @@ export default function Home() {
                   }
                 }}
                 placeholder="Message My AI..."
-                className="flex-1 bg-transparent border-none text-white outline-none resize-none px-1 py-1 text-xs sm:text-sm max-h-40 placeholder-slate-500"
+                className="flex-1 bg-transparent border-none theme-text outline-none resize-none px-1 py-1 text-base max-h-40 placeholder-slate-400"
               />
 
               {loading ? (
