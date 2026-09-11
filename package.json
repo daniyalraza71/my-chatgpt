@@ -11,14 +11,17 @@
     "@huggingface/inference": "^4.13.28",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0",
+    "@tailwindcss/postcss": "^4.3.3",
     "lucide-react": "^1.44.0",
     "next": "latest",
     "openai": "latest",
     "pdfjs-dist": "^6.3.289",
+    "postcss": "^8.5.28",
     "react": "latest",
     "react-dom": "latest",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.1",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "tailwindcss": "^4.3.3"
   }
 }

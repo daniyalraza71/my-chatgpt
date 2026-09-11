@@ -39,10 +39,10 @@ export default function Home() {
   const [user, setUser] = useState(null);
   const [theme, setTheme] = useState("dark");
 
-  // Mobile Responsive State
+  // Mobile Responsive States
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Feature States
+  // New Feature States
   const [searchQuery, setSearchQuery] = useState("");
   const [editingChatId, setEditingChatId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
@@ -60,7 +60,7 @@ export default function Home() {
   const abortControllerRef = useRef(null);
   const router = useRouter();
 
-  // Auto Scroll
+  // Auto Scroll to Bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -132,7 +132,7 @@ export default function Home() {
     document.documentElement.setAttribute("data-theme", nextTheme);
   };
 
-  // Actions
+  // Chat Actions
   const togglePin = async (e, id, currentPinned) => {
     e.stopPropagation();
     const { error } = await supabase
@@ -178,8 +178,9 @@ export default function Home() {
     e.stopPropagation();
     let exportContent = `# ${chat.title}\n\n`;
     messages.forEach((m) => {
-      exportContent += `### ${m.role === "user" ? "User" : "AI"
-        }:\n${m.content}\n\n`;
+      exportContent += `### ${
+        m.role === "user" ? "User" : "AI"
+      }:\n${m.content}\n\n`;
     });
 
     const blob = new Blob([exportContent], { type: "text/markdown" });
@@ -190,12 +191,14 @@ export default function Home() {
     a.click();
   };
 
+  // Copy Message
   const copyToClipboard = (text, index) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  // File Handler
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -234,6 +237,7 @@ export default function Home() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // Send Message Logic
   async function sendMessage(e, customPrompt = null) {
     e?.preventDefault();
 
@@ -253,11 +257,13 @@ export default function Home() {
       ? `📎 [File: ${selectedFile.name}]\n${text}`
       : text;
 
-    const payloadPrompt = `${systemInstructionPrefix}${selectedFile
-        ? `[Attached File: ${selectedFile.name}]\n\nFile Content:\n${fileContent}\n\nUser Question: ${text || "Please review and analyze this file."
-        }`
+    const payloadPrompt = `${systemInstructionPrefix}${
+      selectedFile
+        ? `[Attached File: ${selectedFile.name}]\n\nFile Content:\n${fileContent}\n\nUser Question: ${
+            text || "Please review and analyze this file."
+          }`
         : text
-      }`;
+    }`;
 
     let currentChatId = activeChat;
 
@@ -335,6 +341,7 @@ export default function Home() {
     }
   }
 
+  // Regenerate Response
   const regenerateLastMessage = () => {
     if (messages.length < 2) return;
     const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
@@ -348,7 +355,8 @@ export default function Home() {
   );
 
   return (
-    <main className="flex h-screen w-screen overflow-hidden bg-slate-900 text-slate-100 relative">
+    <main className="flex h-screen h-[100dvh] w-full overflow-hidden bg-slate-900 text-slate-100">
+      
       {/* Mobile Backdrop Overlay */}
       {isSidebarOpen && (
         <div
@@ -359,8 +367,9 @@ export default function Home() {
 
       {/* Sidebar / Mobile Drawer */}
       <aside
-        className={`fixed md:static z-50 top-0 bottom-0 left-0 w-72 h-full bg-slate-950 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out shrink-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-          }`}
+        className={`fixed md:relative z-50 top-0 bottom-0 left-0 w-72 bg-slate-950 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
       >
         <div className="p-4 border-b border-slate-800 flex items-center justify-between">
           <div className="font-bold text-lg tracking-wide text-white">MY AI</div>
@@ -420,10 +429,11 @@ export default function Home() {
                 setActiveChat(chat.id);
                 setIsSidebarOpen(false);
               }}
-              className={`flex items-center justify-between p-2.5 rounded-xl text-xs cursor-pointer group transition ${activeChat === chat.id
+              className={`flex items-center justify-between p-2.5 rounded-xl text-xs cursor-pointer group transition ${
+                activeChat === chat.id
                   ? "bg-slate-800 text-white font-medium"
                   : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
-                }`}
+              }`}
             >
               {editingChatId === chat.id ? (
                 <input
@@ -500,27 +510,25 @@ export default function Home() {
       </aside>
 
       {/* Main Chat Area */}
-      <section className="flex-1 flex flex-col h-full min-w-0 bg-slate-900 relative">
-       {/* Top Navbar with Safe Area Padding */}
-        <header className="w-full border-b border-slate-800 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between shrink-0 bg-slate-900/90 backdrop-blur z-30 sticky top-0 min-h-[3.5rem]">
+      <section className="flex-1 flex flex-col h-full min-w-0 bg-slate-900">
+        {/* Top Navbar */}
+        <header className="h-14 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 bg-slate-900/50 backdrop-blur">
           <div className="flex items-center gap-3">
             <button
-              type="button"
               onClick={() => setIsSidebarOpen(true)}
-              className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 md:hidden active:bg-slate-700 transition shrink-0"
-              aria-label="Open Sidebar"
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 md:hidden"
             >
-              <Menu size={22} />
+              <Menu size={20} />
             </button>
             <div className="flex items-center gap-2">
-              <strong className="text-white text-base sm:text-lg font-bold">My AI</strong>
-              <span className="text-[10px] sm:text-xs text-slate-400 bg-slate-800 border border-slate-700/60 px-2 py-0.5 rounded-full hidden sm:inline-block">
+              <strong className="text-white text-sm sm:text-base">My AI</strong>
+              <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full hidden sm:inline-block">
                 GPT-4o Mini
               </span>
             </div>
           </div>
 
-        {/* Persona Selector */}
+          {/* Persona Selector */}
           <select
             value={systemPersona}
             onChange={(e) => setSystemPersona(e.target.value)}
@@ -547,14 +555,16 @@ export default function Home() {
             messages.map((m, i) => (
               <div
                 key={i}
-                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"
-                  }`}
+                className={`flex ${
+                  m.role === "user" ? "justify-end" : "justify-start"
+                }`}
               >
                 <div
-                  className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 text-xs sm:text-sm break-words ${m.role === "user"
+                  className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 text-xs sm:text-sm break-words ${
+                    m.role === "user"
                       ? "bg-blue-600 text-white rounded-br-none"
                       : "bg-slate-800 text-slate-100 border border-slate-700/50 rounded-bl-none"
-                    }`}
+                  }`}
                 >
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
@@ -678,7 +688,7 @@ export default function Home() {
                   }
                 }}
                 placeholder="Message My AI..."
-                className="flex-1 bg-transparent border-none theme-text outline-none resize-none px-1 py-1 text-base max-h-40 placeholder-slate-400"
+                className="flex-1 bg-transparent border-none text-white outline-none resize-none px-1 py-1 text-xs sm:text-sm max-h-40 placeholder-slate-500"
               />
 
               {loading ? (
