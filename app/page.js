@@ -39,10 +39,10 @@ export default function Home() {
   const [user, setUser] = useState(null);
   const [theme, setTheme] = useState("dark");
 
-  // Mobile Responsive States
+  // Mobile Responsive State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // New Feature States
+  // Feature States
   const [searchQuery, setSearchQuery] = useState("");
   const [editingChatId, setEditingChatId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
@@ -60,7 +60,7 @@ export default function Home() {
   const abortControllerRef = useRef(null);
   const router = useRouter();
 
-  // Auto Scroll to Bottom
+  // Auto Scroll
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -132,7 +132,7 @@ export default function Home() {
     document.documentElement.setAttribute("data-theme", nextTheme);
   };
 
-  // Chat Actions
+  // Actions
   const togglePin = async (e, id, currentPinned) => {
     e.stopPropagation();
     const { error } = await supabase
@@ -191,14 +191,12 @@ export default function Home() {
     a.click();
   };
 
-  // Copy Message
   const copyToClipboard = (text, index) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  // File Handler
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -237,7 +235,6 @@ export default function Home() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Send Message Logic
   async function sendMessage(e, customPrompt = null) {
     e?.preventDefault();
 
@@ -341,7 +338,6 @@ export default function Home() {
     }
   }
 
-  // Regenerate Response
   const regenerateLastMessage = () => {
     if (messages.length < 2) return;
     const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
@@ -355,8 +351,7 @@ export default function Home() {
   );
 
   return (
-    <main className="flex h-screen h-[100dvh] w-full overflow-hidden bg-slate-900 text-slate-100">
-      
+    <main className="flex h-screen w-screen overflow-hidden bg-slate-900 text-slate-100 relative">
       {/* Mobile Backdrop Overlay */}
       {isSidebarOpen && (
         <div
@@ -367,7 +362,7 @@ export default function Home() {
 
       {/* Sidebar / Mobile Drawer */}
       <aside
-        className={`fixed md:relative z-50 top-0 bottom-0 left-0 w-72 bg-slate-950 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`fixed md:static z-50 top-0 bottom-0 left-0 w-72 h-full bg-slate-950 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out shrink-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
@@ -510,9 +505,9 @@ export default function Home() {
       </aside>
 
       {/* Main Chat Area */}
-      <section className="flex-1 flex flex-col h-full min-w-0 bg-slate-900">
+      <section className="flex-1 flex flex-col h-full min-w-0 bg-slate-900 relative">
         {/* Top Navbar */}
-        <header className="h-14 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 bg-slate-900/50 backdrop-blur">
+        <header className="h-14 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 bg-slate-900/50 backdrop-blur z-10">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(true)}
