@@ -501,24 +501,26 @@ export default function Home() {
 
       {/* Main Chat Area */}
       <section className="flex-1 flex flex-col h-full min-w-0 bg-slate-900 relative">
-        {/* Top Navbar */}
-        <header className="h-14 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 bg-slate-900/50 backdrop-blur z-10">
+       {/* Top Navbar with Safe Area Padding */}
+        <header className="w-full border-b border-slate-800 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between shrink-0 bg-slate-900/90 backdrop-blur z-30 sticky top-0 min-h-[3.5rem]">
           <div className="flex items-center gap-3">
             <button
+              type="button"
               onClick={() => setIsSidebarOpen(true)}
-              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 md:hidden"
+              className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 md:hidden active:bg-slate-700 transition shrink-0"
+              aria-label="Open Sidebar"
             >
-              <Menu size={20} />
+              <Menu size={22} />
             </button>
             <div className="flex items-center gap-2">
-              <strong className="text-white text-sm sm:text-base">My AI</strong>
-              <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full hidden sm:inline-block">
+              <strong className="text-white text-base sm:text-lg font-bold">My AI</strong>
+              <span className="text-[10px] sm:text-xs text-slate-400 bg-slate-800 border border-slate-700/60 px-2 py-0.5 rounded-full hidden sm:inline-block">
                 GPT-4o Mini
               </span>
             </div>
           </div>
 
-          {/* Persona Selector */}
+        {/* Persona Selector */}
           <select
             value={systemPersona}
             onChange={(e) => setSystemPersona(e.target.value)}
