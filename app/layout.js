@@ -10,6 +10,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover", // <--- Ye property iOS notch padding enable karegi
 };
 
 export default function RootLayout({ children }) {
