@@ -43,10 +43,18 @@ export async function POST(req) {
         content: m.content,
       }));
 
+    // Dynamic current date & time injection
+    const currentDate = new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
     const messages = [
       {
         role: "system",
-        content: "You are My AI, a helpful, concise and professional personal assistant. Maintain conversation context and answer naturally.",
+        content: `You are My AI, a helpful, concise and professional personal assistant. Today's date is ${currentDate}. Maintain conversation context and answer naturally.`,
       },
       ...input,
     ];
